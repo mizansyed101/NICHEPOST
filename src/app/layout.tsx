@@ -3,6 +3,7 @@ import { Inter, Outfit } from "next/font/google";
 import "./globals.css";
 
 import { NextAuthProvider } from "@/components/Providers";
+import { Analytics } from '@vercel/analytics/next';
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const outfit = Outfit({ subsets: ["latin"], variable: "--font-outfit" });
@@ -30,6 +31,7 @@ export default function RootLayout({
             <script src="https://sdk.cashfree.com/js/v3/cashfree.js" async />
           </NextAuthProvider>
         </div>
+        <Analytics />
       </body>
     </html>
   );
