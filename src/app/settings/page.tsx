@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { 
   Plus, 
   Trash2, 
@@ -16,18 +16,45 @@ import {
 } from 'lucide-react'
 import { Sidebar } from '@/components/Sidebar'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useSession } from 'next-auth/react'
+import { supabase } from '@/lib/supabase'
 
 export default function SettingsPage() {
+  const { data: session } = useSession()
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
-  const [niches, setNiches] = useState<string[]>(['AI SaaS & Solopreneurship', 'Eco-friendly living'])
+  const [niches, setNiches] = useState<string[]>(['AI SaaS & Solopreneurship'])
   const [newNiche, setNewNiche] = useState('')
   const [tone, setTone] = useState('Professional')
-  const [email, setEmail] = useState('alex@example.com')
-  const [name, setName] = useState('Alex Rivera')
-  const [brandUrl, setBrandUrl] = useState('https://nichepost.ai')
+  const [email, setEmail] = useState('')
+  const [name, setName] = useState('')
+  const [brandUrl, setBrandUrl] = useState('')
   const [reminders, setReminders] = useState(true)
   const [isSaved, setIsSaved] = useState(false)
   const [error, setError] = useState('')
+
+  // Sync profile data from session
+  useEffect(() => {
+    if (session?.user) {
+      setName(session.user.name || '')
+      setEmail(session.user.email || '')
+      loadSettings(session.user.email || '')
+    }
+  }, [session])
+
+  const loadSettings = async (userEmail: string) => {
+    const { data, error } = await supabase
+      .from('user_settings')
+      .select('*')
+      .eq('email', userEmail)
+      .single()
+    
+    if (data) {
+      setNiches(data.niches || [])
+      setTone(data.tone || 'Professional')
+      setBrandUrl(data.brand_url || '')
+      setReminders(data.reminders_enabled)
+    }
+  }
 
   const handleAddNiche = () => {
     if (!newNiche.trim()) return
@@ -49,11 +76,31 @@ export default function SettingsPage() {
     setError('')
   }
 
-  const handleSave = () => {
+  const handleSave = async () => {
+    if (!session?.user?.email) return
     setIsSaved(true)
-    setTimeout(() => setIsSaved(false), 3000)
-    // In a real app, sync with Supabase here:
-    // supabase.from('user_settings').upsert({ niches, tone, email, name, reminders_enabled: reminders })
+    
+    const { error } = await supabase
+      .from('user_settings')
+      .upsert({ 
+        email: session.user.email,
+        name,
+        niches, 
+        tone, 
+        brand_url: brandUrl, 
+        reminders_enabled: reminders,
+        updated_at: new Date().toISOString()
+      })
+
+    if (error) {
+       console.error('Save failed:', error)
+       setError('Failed to sync with database.')
+    }
+
+    setTimeout(() => {
+      setIsSaved(false)
+      setError('')
+    }, 3000)
   }
 
   return (

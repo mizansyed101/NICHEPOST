@@ -11,6 +11,7 @@ import { StreakBadge } from '@/components/StreakBadge'
 import { getShareLink } from '@/lib/shareLinks'
 import { ManualPostModal } from '@/components/ManualPostModal'
 import { Pricing } from '@/components/Pricing'
+import { useSession } from 'next-auth/react'
 
 const platforms = [
   { id: 'twitter', name: 'Twitter/X' },
@@ -23,7 +24,9 @@ const platforms = [
 ]
 
 export default function DashboardPage() {
+  const { data: session } = useSession()
   const [posts, setPosts] = useState<Record<string, { content: string; isDone: boolean }>>({
+    // ... same posts
     twitter: { content: "🚀 Just launched NichePost AI! Automating my niche presence has never been easier. No more API key headaches. #SaaS #Growth #AI", isDone: false },
     linkedin: { content: "I'm excited to share a new tool I've been working on: NichePost AI.\n\nBuilt for creators who want to stay consistent across platforms without spending hours on scheduling and API approvals.\n\nWhat are you working on today?", isDone: false },
     reddit: { content: "How do you guys handle multi-platform social media posting? I've been building a tool that uses share URLs instead of APIs to keep things simple. Would love to hear your thoughts.", isDone: false },
@@ -33,15 +36,25 @@ export default function DashboardPage() {
     threads: { content: "Threads is the new frontier for niche growth! 🧵 Just automated my setup with NichePost AI. Who's following for more build updates? 🚀 #BuildInPublic", isDone: false },
   })
 
+  // Admin Exception Login
+  const isAdmin = session?.user?.email === 'temporaryox123@gmail.com'
+  const userPlan = isAdmin ? 'Elite - Admin Access' : 'Pro Plan'
+  const userCredits = isAdmin ? 9999 : 5
+
   const [searchQuery, setSearchQuery] = useState('')
   const [isManualModalOpen, setIsManualModalOpen] = useState(false)
   const [isRegenerating, setIsRegenerating] = useState(false)
   const [showNotifications, setShowNotifications] = useState(false)
   const [activeNiche, setActiveNiche] = useState('AI SaaS')
   const [newsSummary, setNewsSummary] = useState<string | null>(null)
-  const [credits, setCredits] = useState(5)
+  const [credits, setCredits] = useState(userCredits)
   const [showPricing, setShowPricing] = useState(false)
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+
+  // Sync credits if admin status changes (though it shouldn't mid-session)
+  React.useEffect(() => {
+    if (isAdmin) setCredits(9999)
+  }, [isAdmin])
 
   const handleContentChange = (platform: string, newContent: string) => {
     setPosts({ ...posts, [platform]: { ...posts[platform], content: newContent } })
@@ -112,8 +125,8 @@ export default function DashboardPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           plan, 
-          userId: 'user_123', // In a real app, get from session
-          email: 'alex@example.com' 
+          userId: session?.user?.email || 'guest', 
+          email: session?.user?.email 
         })
       })
       const data = await response.json()
@@ -161,12 +174,18 @@ export default function DashboardPage() {
             <StreakBadge count={4} />
             <div className="flex items-center gap-3 pl-6 border-l border-white/5">
               <div className="text-right">
-                <p className="text-sm font-bold leading-tight">Alex Rivera</p>
-                <p className="text-[10px] text-white/40 font-bold uppercase tracking-wider">Pro Plan</p>
+                <p className="text-sm font-bold leading-tight">{session?.user?.name || 'Guest User'}</p>
+                <p className={`text-[10px] font-bold uppercase tracking-wider ${isAdmin ? 'text-amber-400' : 'text-white/40'}`}>
+                  {userPlan}
+                </p>
               </div>
               <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-cyan-500 p-[1px]">
                 <div className="w-full h-full rounded-full bg-[#0a0a0f] flex items-center justify-center overflow-hidden">
-                   <Layers className="w-6 h-6 text-white/60" />
+                   {session?.user?.image ? (
+                     <img src={session.user.image} alt="" className="w-full h-full object-cover" />
+                   ) : (
+                     <Layers className="w-6 h-6 text-white/60" />
+                   )}
                 </div>
               </div>
             </div>

@@ -14,10 +14,11 @@ import {
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { signOut } from 'next-auth/react'
+import { signOut, useSession } from 'next-auth/react'
 
 export function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   const pathname = usePathname()
+  const { data: session } = useSession()
 
   const links = [
     { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -61,24 +62,42 @@ export function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
         })}
       </nav>
 
-      <div className="pt-6 border-t border-white/5">
-        <Link 
-          href="/profile" 
-          onClick={() => { if (window.innerWidth < 1024) onClose() }}
-          className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all mb-4 ${
-            pathname === '/profile'
-              ? 'bg-purple-500/10 text-purple-400 font-bold border border-purple-500/20'
-              : 'text-white/60 hover:text-white hover:bg-white/5'
-          }`}
-        >
-          <User className="w-5 h-5" /> Profile
-        </Link>
-        <button 
-          onClick={() => signOut({ callbackUrl: '/login' })}
-          className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-400/60 hover:text-red-400 hover:bg-red-400/10 transition-all font-outfit"
-        >
-          <LogOut className="w-5 h-5" /> Logout
-        </button>
+      <div className="pt-6 border-t border-white/5 space-y-4">
+        {session?.user && (
+          <div className="px-4 py-3 flex items-center gap-3 bg-white/5 rounded-2xl border border-white/5">
+            {session.user.image ? (
+              <img src={session.user.image} alt="" className="w-8 h-8 rounded-full border border-purple-500/30" />
+            ) : (
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-cyan-500 flex items-center justify-center">
+                <User className="w-4 h-4 text-white" />
+              </div>
+            )}
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-bold text-white truncate">{session.user.name}</p>
+              <p className="text-[10px] text-white/40 truncate">{session.user.email}</p>
+            </div>
+          </div>
+        )}
+
+        <div className="space-y-2">
+          <Link 
+            href="/profile" 
+            onClick={() => { if (window.innerWidth < 1024) onClose() }}
+            className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+              pathname === '/profile'
+                ? 'bg-purple-500/10 text-purple-400 font-bold border border-purple-500/20'
+                : 'text-white/60 hover:text-white hover:bg-white/5'
+            }`}
+          >
+            <User className="w-5 h-5" /> Profile
+          </Link>
+          <button 
+            onClick={() => signOut({ callbackUrl: '/login' })}
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-400/60 hover:text-red-400 hover:bg-red-400/10 transition-all font-outfit"
+          >
+            <LogOut className="w-5 h-5" /> Logout
+          </button>
+        </div>
       </div>
     </div>
   )
