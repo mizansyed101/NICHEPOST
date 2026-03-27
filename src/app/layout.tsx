@@ -27,7 +27,7 @@ export default function RootLayout({
         <div className="relative z-10">
           <NextAuthProvider>
             {children}
-            <script src="https://checkout.razorpay.com/v1/checkout.js" async />
+            <script src="https://sdk.cashfree.com/js/v3/cashfree.js" async />
           </NextAuthProvider>
         </div>
       </body>

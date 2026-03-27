@@ -100,6 +100,41 @@ export default function DashboardPage() {
     navigator.clipboard.writeText(content)
   }
 
+  const handleSubscribe = async (plan: string) => {
+    if (plan === 'FREE') {
+      alert('You are already on the Free plan!')
+      return
+    }
+
+    try {
+      const response = await fetch('/api/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          plan, 
+          userId: 'user_123', // In a real app, get from session
+          email: 'alex@example.com' 
+        })
+      })
+      const data = await response.json()
+      
+      if (data.success && data.payment_session_id) {
+        // @ts-ignore
+        const cashfree = new window.Cashfree({
+          mode: "sandbox" // or "production"
+        });
+        
+        cashfree.checkout({
+          paymentSessionId: data.payment_session_id,
+          redirectTarget: "_self"
+        });
+      }
+    } catch (err) {
+      console.error('Checkout failed:', err)
+      alert('Failed to initiate checkout. Please try again.')
+    }
+  }
+
   return (
     <div className="min-h-screen bg-[#0a0a0f] text-white lg:pl-64">
       <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
@@ -210,10 +245,7 @@ export default function DashboardPage() {
               >
                 <X className="w-6 h-6" />
               </button>
-              <Pricing onSelect={(plan) => {
-                alert(`Plan selected: ${plan}. Razorpay checkout starting...`)
-                setShowPricing(false)
-              }} />
+              <Pricing onSelect={handleSubscribe} />
             </motion.div>
           </div>
         )}
