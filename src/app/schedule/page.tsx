@@ -16,8 +16,12 @@ import {
   Check,
   AtSign,
   Menu,
-  Calendar
+  Calendar,
+  Loader2
 } from 'lucide-react'
+import { useSession } from 'next-auth/react'
+import { supabase } from '@/lib/supabase'
+import { useEffect } from 'react'
 
 const initialSlots = [
   { id: 1, time: '09:00 AM', platforms: ['twitter', 'linkedin'], active: true },
@@ -25,13 +29,51 @@ const initialSlots = [
 ]
 
 export default function SchedulePage() {
+  const { data: session } = useSession()
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
-  const [slots, setSlots] = useState(initialSlots)
+  const [slots, setSlots] = useState<{id: any, time: string, platforms: string[], active: boolean}[]>([])
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
   const [newTime, setNewTime] = useState('09:00')
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>(['twitter'])
+  const [isLoading, setIsLoading] = useState(true)
 
-  const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+  useEffect(() => {
+    if (session?.user?.email) {
+      loadSchedule(session.user.email)
+    }
+  }, [session])
+
+  const loadSchedule = async (email: string) => {
+    try {
+      setIsLoading(true)
+      const { data, error } = await supabase
+        .from('user_settings')
+        .select('schedule')
+        .eq('email', email)
+        .single()
+      
+      if (data?.schedule) {
+        setSlots(data.schedule)
+      } else {
+        setSlots([
+          { id: 1, time: '09:00 AM', platforms: ['twitter', 'linkedin'], active: true },
+          { id: 2, time: '02:00 PM', platforms: ['twitter', 'reddit'], active: true },
+        ])
+      }
+    } catch (err) {
+      console.error('Schedule load failed:', err)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const syncSchedule = async (newSlots: any[]) => {
+    if (!session?.user?.email) return
+    const { error } = await supabase
+      .from('user_settings')
+      .upsert({ email: session.user.email, schedule: newSlots }, { onConflict: 'email' })
+    if (error) console.error('Schedule sync failed:', error)
+  }
 
   const handleAddSlot = () => {
     // Convert 24h to 12h for display
@@ -47,9 +89,23 @@ export default function SchedulePage() {
       platforms: selectedPlatforms,
       active: true
     }
-    setSlots([...slots, newSlot])
+    const newSlots = [...slots, newSlot]
+    setSlots(newSlots)
+    syncSchedule(newSlots)
     setIsAddModalOpen(false)
     setSelectedPlatforms(['twitter'])
+  }
+
+  const handleToggleActive = (id: any) => {
+    const newSlots = slots.map(s => s.id === id ? {...s, active: !s.active} : s)
+    setSlots(newSlots)
+    syncSchedule(newSlots)
+  }
+
+  const handleDelete = (id: any) => {
+    const newSlots = slots.filter(s => s.id !== id)
+    setSlots(newSlots)
+    syncSchedule(newSlots)
   }
 
   const togglePlatform = (p: string) => {
@@ -100,50 +156,57 @@ export default function SchedulePage() {
           
           <div className="space-y-4">
             <AnimatePresence mode="popLayout">
-              {slots.map((slot) => (
-                <motion.div 
-                  key={slot.id}
-                  layout
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
-                  className="p-6 rounded-3xl bg-[#0e0e13]/50 border border-white/5 backdrop-blur-xl flex items-center justify-between group"
-                >
-                  <div className="flex items-center gap-8">
-                    <div className="text-2xl font-bold font-outfit text-white">{slot.time}</div>
-                    <div className="flex gap-2">
-                      {slot.platforms.map(p => (
-                        <div key={p} className="p-2 rounded-lg bg-white/5 border border-white/10 text-white/40 group-hover:text-cyan-400 group-hover:border-cyan-500/30 transition-all">
-                          {p === 'twitter' && <Twitter className="w-4 h-4" />}
-                          {p === 'linkedin' && <Linkedin className="w-4 h-4" />}
-                          {p === 'reddit' && <MessageSquare className="w-4 h-4" />}
-                          {p === 'threads' && <AtSign className="w-4 h-4" />}
-                        </div>
-                      ))}
+              {isLoading ? (
+                 <div className="py-10 flex flex-col items-center justify-center text-white/20">
+                   <Loader2 className="w-8 h-8 animate-spin mb-2" />
+                   <p className="text-sm font-medium">Checking your slots...</p>
+                 </div>
+              ) : (
+                slots.map((slot) => (
+                  <motion.div 
+                    key={slot.id}
+                    layout
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    className="p-6 rounded-3xl bg-[#0e0e13]/50 border border-white/5 backdrop-blur-xl flex items-center justify-between group"
+                  >
+                    <div className="flex items-center gap-8">
+                      <div className="text-2xl font-bold font-outfit text-white">{slot.time}</div>
+                      <div className="flex gap-2">
+                        {slot.platforms.map(p => (
+                          <div key={p} className="p-2 rounded-lg bg-white/5 border border-white/10 text-white/40 group-hover:text-cyan-400 group-hover:border-cyan-500/30 transition-all">
+                            {p === 'twitter' && <Twitter className="w-4 h-4" />}
+                            {p === 'linkedin' && <Linkedin className="w-4 h-4" />}
+                            {p === 'reddit' && <MessageSquare className="w-4 h-4" />}
+                            {p === 'threads' && <AtSign className="w-4 h-4" />}
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                  </div>
 
-                  <div className="flex items-center gap-6">
-                    <div className="flex items-center gap-2">
-                      <span className={`text-[10px] font-bold uppercase tracking-wider ${slot.active ? 'text-green-400' : 'text-white/20'}`}>
-                        {slot.active ? 'Active' : 'Paused'}
-                      </span>
+                    <div className="flex items-center gap-6">
+                      <div className="flex items-center gap-2">
+                        <span className={`text-[10px] font-bold uppercase tracking-wider ${slot.active ? 'text-green-400' : 'text-white/20'}`}>
+                          {slot.active ? 'Active' : 'Paused'}
+                        </span>
+                        <button 
+                          onClick={() => handleToggleActive(slot.id)}
+                          className={`w-10 h-5 rounded-full relative transition-all ${slot.active ? 'bg-green-500' : 'bg-white/10'}`}
+                        >
+                          <div className={`absolute top-1 w-3 h-3 rounded-full bg-white transition-all ${slot.active ? 'right-1' : 'left-1'}`} />
+                        </button>
+                      </div>
                       <button 
-                        onClick={() => setSlots(slots.map(s => s.id === slot.id ? {...s, active: !s.active} : s))}
-                        className={`w-10 h-5 rounded-full relative transition-all ${slot.active ? 'bg-green-500' : 'bg-white/10'}`}
+                        onClick={() => handleDelete(slot.id)}
+                        className="p-2 text-white/20 hover:text-red-400 transition-colors"
                       >
-                        <div className={`absolute top-1 w-3 h-3 rounded-full bg-white transition-all ${slot.active ? 'right-1' : 'left-1'}`} />
+                        <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
-                    <button 
-                      onClick={() => setSlots(slots.filter(s => s.id !== slot.id))}
-                      className="p-2 text-white/20 hover:text-red-400 transition-colors"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                </motion.div>
-              ))}
+                  </motion.div>
+                ))
+              )}
             </AnimatePresence>
           </div>
         </section>

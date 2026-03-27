@@ -2,9 +2,10 @@
 
 -- 1. Create User Settings Table
 CREATE TABLE IF NOT EXISTS public.user_settings (
-    email TEXT PRIMARY KEY REFERENCES auth.users(email) ON DELETE CASCADE,
+    email TEXT PRIMARY KEY,
     name TEXT,
     niches TEXT[] DEFAULT '{}',
+    schedule JSONB DEFAULT '[]',
     tone TEXT DEFAULT 'Professional',
     brand_url TEXT,
     reminders_enabled BOOLEAN DEFAULT true,

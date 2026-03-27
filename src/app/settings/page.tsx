@@ -12,7 +12,8 @@ import {
   CheckCircle2, 
   AlertCircle,
   Menu,
-  Settings
+  Settings,
+  Loader2
 } from 'lucide-react'
 import { Sidebar } from '@/components/Sidebar'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -31,6 +32,7 @@ export default function SettingsPage() {
   const [reminders, setReminders] = useState(true)
   const [isSaved, setIsSaved] = useState(false)
   const [error, setError] = useState('')
+  const [isLoading, setIsLoading] = useState(true)
 
   // Sync profile data from session
   useEffect(() => {
@@ -42,17 +44,24 @@ export default function SettingsPage() {
   }, [session])
 
   const loadSettings = async (userEmail: string) => {
-    const { data, error } = await supabase
-      .from('user_settings')
-      .select('*')
-      .eq('email', userEmail)
-      .single()
-    
-    if (data) {
-      setNiches(data.niches || [])
-      setTone(data.tone || 'Professional')
-      setBrandUrl(data.brand_url || '')
-      setReminders(data.reminders_enabled)
+    try {
+      setIsLoading(true)
+      const { data, error } = await supabase
+        .from('user_settings')
+        .select('*')
+        .eq('email', userEmail)
+        .single()
+      
+      if (data) {
+        setNiches(data.niches || [])
+        setTone(data.tone || 'Professional')
+        setBrandUrl(data.brand_url || '')
+        setReminders(data.reminders_enabled)
+      }
+    } catch (err) {
+      console.error('Settings load failed:', err)
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -122,7 +131,13 @@ export default function SettingsPage() {
         </button>
       </div>
       
-      <main className="p-10 max-w-4xl">
+      {isLoading ? (
+        <div className="flex-1 flex flex-col items-center justify-center min-h-[60vh]">
+          <Loader2 className="w-12 h-12 text-purple-500 animate-spin mb-4" />
+          <p className="text-white/40 font-medium">Syncing your preferences...</p>
+        </div>
+      ) : (
+        <main className="p-10 max-w-4xl">
         <header className="mb-10">
           <h1 className="text-4xl font-bold font-outfit mb-2">Settings</h1>
           <p className="text-white/60">Manage your topics, delivery, and account details.</p>
@@ -293,7 +308,8 @@ export default function SettingsPage() {
             </button>
           </div>
         </div>
-      </main>
+        </main>
+      )}
     </div>
   )
 }
