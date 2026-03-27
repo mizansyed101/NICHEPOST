@@ -13,7 +13,7 @@ import {
   AlertCircle,
   Menu,
   Settings,
-  Loader2
+  Loader
 } from 'lucide-react'
 import { Sidebar } from '@/components/Sidebar'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -133,7 +133,7 @@ export default function SettingsPage() {
       
       {isLoading ? (
         <div className="flex-1 flex flex-col items-center justify-center min-h-[60vh]">
-          <Loader2 className="w-12 h-12 text-purple-500 animate-spin mb-4" />
+          <Loader className="w-12 h-12 text-purple-500 animate-spin mb-4" />
           <p className="text-white/40 font-medium">Syncing your preferences...</p>
         </div>
       ) : (

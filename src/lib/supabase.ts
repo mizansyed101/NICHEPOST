@@ -6,5 +6,7 @@ const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || ''
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
-// Admin client for server-side operations
-export const supabaseAdmin = createClient(supabaseUrl, supabaseServiceRoleKey)
+// Admin client for server-side operations (Safe for client-side imports)
+export const supabaseAdmin = (typeof window === 'undefined' && supabaseServiceRoleKey) 
+  ? createClient(supabaseUrl, supabaseServiceRoleKey)
+  : null as unknown as ReturnType<typeof createClient>

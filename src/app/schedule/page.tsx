@@ -17,7 +17,7 @@ import {
   AtSign,
   Menu,
   Calendar,
-  Loader2
+  Loader
 } from 'lucide-react'
 import { useSession } from 'next-auth/react'
 import { supabase } from '@/lib/supabase'
@@ -158,7 +158,7 @@ export default function SchedulePage() {
             <AnimatePresence mode="popLayout">
               {isLoading ? (
                  <div className="py-10 flex flex-col items-center justify-center text-white/20">
-                   <Loader2 className="w-8 h-8 animate-spin mb-2" />
+                   <Loader className="w-8 h-8 animate-spin mb-2" />
                    <p className="text-sm font-medium">Checking your slots...</p>
                  </div>
               ) : (
