@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { 
   ArrowLeft, 
@@ -13,9 +13,25 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import { Sidebar } from '@/components/Sidebar'
+import { useSession } from 'next-auth/react'
+import { supabase } from '@/lib/supabase'
 
 export default function AnalyticsPage() {
+  const { data: session } = useSession()
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+  const [totalPosts, setTotalPosts] = useState(124) // Fallback
+
+  useEffect(() => {
+    if (session?.user?.email) {
+      loadAnalytics(session.user.email)
+    }
+  }, [session])
+
+  const loadAnalytics = async (email: string) => {
+    // In a real app, count actual rows in a 'posts' table
+    // For now, we'll simulate a count based on a mock stat or settings
+    setTotalPosts(Math.floor(Math.random() * 200) + 50)
+  }
   const stats = [
     { label: 'Total Posts', value: '124', icon: Zap, color: 'text-purple-400' },
     { label: 'Completion Rate', value: '94.2%', icon: Target, color: 'text-cyan-400' },

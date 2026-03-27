@@ -57,16 +57,17 @@ export default function SettingsPage() {
   }
 
   const handleAddNiche = () => {
-    if (!newNiche.trim()) return
+    const trimmed = newNiche.trim()
+    if (!trimmed) return
     if (niches.length >= 10) {
       setError('Maximum 10 niches allowed.')
       return
     }
-    if (niches.includes(newNiche.trim())) {
+    if (niches.some(n => n.toLowerCase() === trimmed.toLowerCase())) {
       setError('This niche is already in your list.')
       return
     }
-    setNiches([...niches, newNiche.trim()])
+    setNiches(prev => [...prev, trimmed])
     setNewNiche('')
     setError('')
   }
