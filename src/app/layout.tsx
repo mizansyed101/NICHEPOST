@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Outfit } from "next/font/google";
 import "./globals.css";
+import { Analytics } from '@vercel/analytics/next';
 
 import { NextAuthProvider } from "@/components/Providers";
 
@@ -30,6 +31,7 @@ export default function RootLayout({
             <script src="https://sdk.cashfree.com/js/v3/cashfree.js" async />
           </NextAuthProvider>
         </div>
+        <Analytics />
       </body>
     </html>
   );
