@@ -29,7 +29,7 @@ const initialSlots = [
 ]
 
 export default function SchedulePage() {
-  const { data: session } = useSession()
+  const { data: session, status } = useSession()
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [slots, setSlots] = useState<{id: any, time: string, platforms: string[], active: boolean}[]>([])
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
@@ -38,10 +38,18 @@ export default function SchedulePage() {
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    if (session?.user?.email) {
+    if (status === 'unauthenticated') {
+      setIsLoading(false)
+      if (slots.length === 0) {
+        setSlots([
+          { id: 1, time: '09:00 AM', platforms: ['twitter', 'linkedin'], active: true },
+          { id: 2, time: '02:00 PM', platforms: ['twitter', 'reddit'], active: true },
+        ])
+      }
+    } else if (status === 'authenticated' && session?.user?.email) {
       loadSchedule(session.user.email)
     }
-  }, [session])
+  }, [session, status])
 
   const loadSchedule = async (email: string) => {
     try {

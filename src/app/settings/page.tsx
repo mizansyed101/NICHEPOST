@@ -21,7 +21,7 @@ import { useSession } from 'next-auth/react'
 import { supabase } from '@/lib/supabase'
 
 export default function SettingsPage() {
-  const { data: session } = useSession()
+  const { data: session, status } = useSession()
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [niches, setNiches] = useState<string[]>(['AI SaaS & Solopreneurship'])
   const [newNiche, setNewNiche] = useState('')
@@ -36,12 +36,14 @@ export default function SettingsPage() {
 
   // Sync profile data from session
   useEffect(() => {
-    if (session?.user) {
+    if (status === 'unauthenticated') {
+      setIsLoading(false)
+    } else if (status === 'authenticated' && session?.user) {
       setName(session.user.name || '')
       setEmail(session.user.email || '')
       loadSettings(session.user.email || '')
     }
-  }, [session])
+  }, [session, status])
 
   const loadSettings = async (userEmail: string) => {
     try {
