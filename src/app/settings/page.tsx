@@ -10,12 +10,15 @@ import {
   Bell, 
   Save, 
   CheckCircle2, 
-  AlertCircle 
+  AlertCircle,
+  Menu,
+  Settings
 } from 'lucide-react'
 import { Sidebar } from '@/components/Sidebar'
 import { motion, AnimatePresence } from 'framer-motion'
 
 export default function SettingsPage() {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [niches, setNiches] = useState<string[]>(['AI SaaS & Solopreneurship', 'Eco-friendly living'])
   const [newNiche, setNewNiche] = useState('')
   const [tone, setTone] = useState('Professional')
@@ -54,8 +57,22 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0a0f] text-white pl-64">
-      <Sidebar />
+    <div className="min-h-screen bg-[#0a0a0f] text-white lg:pl-64">
+      <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
+      
+      {/* Mobile Header */}
+      <div className="lg:hidden flex items-center justify-between p-4 border-b border-white/5 bg-[#0a0a0f]/80 backdrop-blur-md sticky top-0 z-30">
+        <div className="flex items-center gap-2">
+          <Settings className="w-5 h-5 text-purple-400" />
+          <span className="font-bold font-outfit">Settings</span>
+        </div>
+        <button 
+          onClick={() => setIsSidebarOpen(true)}
+          className="p-2 hover:bg-white/5 rounded-lg text-white/60 hover:text-white transition-all"
+        >
+          <Menu className="w-6 h-6" />
+        </button>
+      </div>
       
       <main className="p-10 max-w-4xl">
         <header className="mb-10">

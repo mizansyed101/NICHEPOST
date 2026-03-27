@@ -14,7 +14,9 @@ import {
   Trash2,
   X,
   Check,
-  AtSign
+  AtSign,
+  Menu,
+  Calendar
 } from 'lucide-react'
 
 const initialSlots = [
@@ -23,6 +25,7 @@ const initialSlots = [
 ]
 
 export default function SchedulePage() {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [slots, setSlots] = useState(initialSlots)
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
   const [newTime, setNewTime] = useState('09:00')
@@ -58,8 +61,22 @@ export default function SchedulePage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0a0f] text-white pl-64">
-      <Sidebar />
+    <div className="min-h-screen bg-[#0a0a0f] text-white lg:pl-64">
+      <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
+      
+      {/* Mobile Header */}
+      <div className="lg:hidden flex items-center justify-between p-4 border-b border-white/5 bg-[#0a0a0f]/80 backdrop-blur-md sticky top-0 z-30">
+        <div className="flex items-center gap-2">
+          <Calendar className="w-5 h-5 text-purple-400" />
+          <span className="font-bold font-outfit">Schedule</span>
+        </div>
+        <button 
+          onClick={() => setIsSidebarOpen(true)}
+          className="p-2 hover:bg-white/5 rounded-lg text-white/60 hover:text-white transition-all"
+        >
+          <Menu className="w-6 h-6" />
+        </button>
+      </div>
       
       <main className="p-10 max-w-5xl">
         <header className="flex justify-between items-end mb-12">

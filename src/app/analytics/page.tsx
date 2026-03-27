@@ -1,18 +1,21 @@
 'use client'
 
-import React from 'react'
+import React, { useState } from 'react'
 import { motion } from 'framer-motion'
 import { 
   ArrowLeft, 
   Zap, 
   Target, 
   TrendingUp,
-  Sparkles
+  Sparkles,
+  Menu,
+  BarChart3
 } from 'lucide-react'
 import Link from 'next/link'
 import { Sidebar } from '@/components/Sidebar'
 
 export default function AnalyticsPage() {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const stats = [
     { label: 'Total Posts', value: '124', icon: Zap, color: 'text-purple-400' },
     { label: 'Completion Rate', value: '94.2%', icon: Target, color: 'text-cyan-400' },
@@ -22,8 +25,22 @@ export default function AnalyticsPage() {
   const chartData = [40, 70, 45, 90, 65, 80, 55]
 
   return (
-    <div className="min-h-screen bg-[#0a0a0f] text-white pl-64">
-      <Sidebar />
+    <div className="min-h-screen bg-[#0a0a0f] text-white lg:pl-64">
+      <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
+
+      {/* Mobile Header */}
+      <div className="lg:hidden flex items-center justify-between p-4 border-b border-white/5 bg-[#0a0a0f]/80 backdrop-blur-md sticky top-0 z-30">
+        <div className="flex items-center gap-2">
+          <BarChart3 className="w-5 h-5 text-purple-400" />
+          <span className="font-bold font-outfit">Analytics</span>
+        </div>
+        <button 
+          onClick={() => setIsSidebarOpen(true)}
+          className="p-2 hover:bg-white/5 rounded-lg text-white/60 hover:text-white transition-all"
+        >
+          <Menu className="w-6 h-6" />
+        </button>
+      </div>
 
       <main className="p-10">
         <header className="flex flex-wrap items-center gap-4 mb-10">
